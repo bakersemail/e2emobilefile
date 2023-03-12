@@ -1,4 +1,4 @@
-= Demo OpenPGP client use in Expo and React Native =
+# Demo OpenPGP client use in Expo and React Native
 
 - run npm install
 - run npx expo start
