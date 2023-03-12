@@ -485,8 +485,20 @@ const App = () => {
     }
   };
 
+  const prepareRandom = async () => {
+    try {
+      openpgp.prepareRandomValues()
+      return "loaded random"
+    } catch (error) {
+      console.error(error)
+      return "failed random"
+    } finally {
+      setLoading(false)
+    } 
+  }
+
   useEffect(() => {
-    //getFile();
+    
   }, []);
 
   return (
@@ -497,6 +509,7 @@ const App = () => {
         <View>
           { data && data.movies ? (<Text>Loaded file {data.movies[0].title}</Text>) : (<Text>Load a file</Text>) }
           <Button onPress={getFile} title="Load file" />
+          <Button onPress={prepareRandom} title="Load random" />
           <Button onPress={generateKeys} title="Generate keys" />
           <Text>{generatedPrivateKey}</Text>
           <Text>{generatedPublicKey}</Text>
