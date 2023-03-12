@@ -4,3 +4,5 @@
 - run npx expo start
 
 There's an issue with jsbn.js duplicating a function copy jsbn.js over ./node_modules/react-native-openpgp/src/crypto/public_key/jsbn.js to remove it.
+
+Generating keys also takes several minutes to complete in IOS emulator.
