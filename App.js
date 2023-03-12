@@ -422,44 +422,62 @@ function parseMessage(message, format) {
 
 
 const App = () => {
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState(false);
+  const [generatedPrivateKey, setGeneratedPrivateKey] = useState('private key')
+  const [generatedPublicKey, setGeneratedPublicKey] = useState('public key')
   const [data, setData] = useState([]);
+  
 
+  const generateKeys = async () => {
+    // these options used when generating the keys originally
+    var options = {
+      userIds: [{ name:'Jon Smith', email:'jon@example.com' }], // multiple user IDs
+      numBits: 2048,                                            // RSA key size
+      passphrase: 'super long and hard to guess secret'         // protects the private key
+    };
+
+    try {
+      setLoading(true)
+      openpgp.generateKey(options).then((keypair) => {      
+        setGeneratedPrivateKey(keypair.privateKeyArmored)
+        setGeneratedPublicKey(keypair.publicKeyArmored)
+        setLoading(false)
+      })
+    } catch(error) {
+      console.error(error)
+    } finally {
+      //setLoading(false)
+    }
+  }
+
+  const decryptFile = async () => {
+    setLoading(true)
+    const message = openpgp.readMessage(testmsg)
+    const keys = openpgp.readArmoredKey(prikey)
+    const decKey = openpgp.decryptKey({ privateKey: keys.keys[0], passphrase: 'super long and hard to guess secret' })
+    const decMessage = message.decrypt(decKey.key)
+    
+    const parsed = parseMessage(decMessage, 'binary')      
+    const b64Data = base64.encodeFromByteArray(parsed.data)
+    
+    let fileUri = FileSystem.documentDirectory + parsed.filename;
+    console.log(fileUri)
+    try {          
+        await FileSystem.writeAsStringAsync(fileUri, b64Data, { encoding: FileSystem.EncodingType.Base64 })
+        await Sharing.shareAsync(fileUri, { UTI: 'application/pdf' })
+    } catch(err){
+        console.log("FS Err: ", err)
+    } finally {
+      setLoading(false)
+    }
+  }
   
-  
-  const getMovies = async () => {
+  const getFile = async () => {
+    setLoading(true)
     try {
       const response = await fetch('https://reactnative.dev/movies.json');
       const json = await response.json();
-      // these options used when generating the keys originally
-      var options = {
-        userIds: [{ name:'Jon Smith', email:'jon@example.com' }], // multiple user IDs
-        numBits: 2048,                                            // RSA key size
-        passphrase: 'super long and hard to guess secret'         // protects the private key
-      };
-
-      openpgp.generateKey(options).then((keypair) => {
-        console.log(keypair)
-      })
-      
-
-      const message = openpgp.readMessage(testmsg)
-      const keys = openpgp.readArmoredKey(prikey)
-      const decKey = openpgp.decryptKey({ privateKey: keys.keys[0], passphrase: 'super long and hard to guess secret' })
-      const decMessage = message.decrypt(decKey.key)
-      
-      const parsed = parseMessage(decMessage, 'binary')      
-      const b64Data = base64.encodeFromByteArray(parsed.data)
-      
-      let fileUri = FileSystem.documentDirectory + parsed.filename;
-      console.log(fileUri)
-      try {          
-          const res = await FileSystem.writeAsStringAsync(fileUri, b64Data, { encoding: FileSystem.EncodingType.Base64 })
-          await Sharing.shareAsync(fileUri, { UTI: 'application/pdf' })
-      } catch(err){
-          console.log("FS Err: ", err)
-      }
-      setData(parsed);
+      setData(json)
     } catch (error) {
       console.error(error);
     } finally {
@@ -468,7 +486,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    getMovies();
+    //getFile();
   }, []);
 
   return (
@@ -476,7 +494,14 @@ const App = () => {
       {isLoading ? (
         <ActivityIndicator />
       ) : (
-        <Text>Opening file</Text>
+        <div>
+          { data && data.movies ? (<Text>Loaded file {data.movies[0].title}</Text>) : (<Text>Load a file</Text>) }
+          <br/><button onClick={getFile}>Load file</button><br/>
+          <button onClick={generateKeys}>Generate keys</button><br/>
+          <Text>{generatedPrivateKey}</Text><br/>
+          <Text>{generatedPublicKey}</Text><br/>
+          <button onClick={decryptFile}>Decrypt file</button>
+        </div>
       )}
     </View>
   );
