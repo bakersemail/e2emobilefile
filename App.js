@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, FlatList, Text, View} from 'react-native';
+import {ActivityIndicator, FlatList, Text, View, Button} from 'react-native';
 import * as openpgp from 'react-native-openpgp';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -494,14 +494,14 @@ const App = () => {
       {isLoading ? (
         <ActivityIndicator />
       ) : (
-        <div>
+        <View>
           { data && data.movies ? (<Text>Loaded file {data.movies[0].title}</Text>) : (<Text>Load a file</Text>) }
-          <br/><button onClick={getFile}>Load file</button><br/>
-          <button onClick={generateKeys}>Generate keys</button><br/>
-          <Text>{generatedPrivateKey}</Text><br/>
-          <Text>{generatedPublicKey}</Text><br/>
-          <button onClick={decryptFile}>Decrypt file</button>
-        </div>
+          <Button onPress={getFile} title="Load file" />
+          <Button onPress={generateKeys} title="Generate keys" />
+          <Text>{generatedPrivateKey}</Text>
+          <Text>{generatedPublicKey}</Text>
+          <Button onPress={decryptFile} title="Decrypt file" />
+        </View>
       )}
     </View>
   );
